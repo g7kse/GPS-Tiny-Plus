@@ -1,0 +1,209 @@
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_PCD8544.h>
+
+#define NUMFLAKES 10
+#define XPOS 0
+#define YPOS 1
+#define DELTAY 2
+
+// Software SPI (slower updates, more flexible pin options):
+// pin 12 - Serial clock out (SCLK)
+// pin 11 - Serial data out (DIN)
+// pin 10 - Data/Command select (D/C)
+// pin 9 - LCD chip select (CS)
+// pin 8 - LCD reset (RST)
+Adafruit_PCD8544 display = Adafruit_PCD8544(8, 9, 10, 11, 12);
+
+static const int RXPin = 3, TXPin = 4; //connect GPS to pins 2 & 3
+static const uint32_t GPSBaud = 9600;
+
+// The TinyGPS++ object
+TinyGPSPlus gps;
+
+// The serial connection to the GPS device
+SoftwareSerial ss(RXPin, TXPin);
+
+//**********************************************************************
+
+void setup()
+{  
+  Serial.begin(9600);
+
+  display.begin();
+  display.setContrast(50);
+  display.clearDisplay();
+
+// text display tests
+  display.setTextSize(1);
+  display.setTextColor(BLACK);
+  display.setCursor(10,0);
+  display.println("A GPS Clock");
+  display.setCursor(5,20);
+  display.println("by Alex Hill");
+  display.setCursor(10,40);
+  display.println("g7kse.co.uk");
+  display.display();
+  delay(2000);
+  display.clearDisplay();
+  
+  char string[12];
+    float gpshour = (gps.time.hour());
+    float gpsmin = (gps.time.minute());
+    float gpssec = (gps.time.second());
+    float gpsday = (gps.date.day());
+    
+    float gpsyear = (gps.date.year());
+    float gpslng = (gps.location.lng());
+    float gpslat = (gps.location.lat());
+    float gpsfix = (gps.satellites.value());  
+} 
+
+//**********************************************************************
+void loop()
+/*{
+  // This sketch displays information every time a new sentence is correctly encoded.
+  while (ss.available() > 0)
+    if (gps.encode(ss.read()))
+      displayInfo();
+
+  if (millis() > 5000 && gps.charsProcessed() < 10)
+  {
+   display.setCursor(10,0);
+   display.println(F("No GPS detected: check wiring."));
+   for (int positionCounter = 0; positionCounter < 20; positionCounter++) {
+    while(true);
+  }
+}
+}
+*/
+//**********************************************************************
+
+/*{
+
+//float gpslng = (gps.location.lng());//(gps.location.lng());
+//float gpslat = (gps.location.lat()); //(gps.location.lat());
+
+//feedgps();                                        
+//getGPS(); 
+long gpslat,gpslng;
+unsigned long fix_age;
+//gps.get_position(&lat, &lon, &fix_age);          // retrieves +/- lat/long in 100000ths of a degree  
+
+#ifdef Demo
+gpslat = 54642685;                               //  S37 47.332 e144 57.916 
+gpslng = -3537683;                               //  S37.788867 E144.965267 
+#endif
+
+gpslng = gpslng + 18000000;                            // Step 1
+gpslat = gpslat +  9000000;                            // Adjust so Locn AA is at the pole
+
+char MH[6] = {'A', 'A', '0', '0', 'a', 'a'};     // Initialise our print string
+  MH[0] +=  gpslng / 2000000;                       // Field
+  MH[1] +=  gpslat / 1000000;
+  MH[2] += (gpslng % 2000000) / 200000;             // Square
+  MH[3] += (gpslat % 1000000) / 100000;
+  MH[4] += (gpslng %  200000) /   8333;             // Subsquare .08333 is   5/60 
+  MH[5] += (gpslat %  100000) /   4166;             //           .04166 is 2.5/60
+  
+String MH_txt = "";                              // Build up Maidenhead
+int i = 0;                                       // into a string that's easy to print
+while (i < 6){ 
+  MH_txt += MH[i];
+  i++; }
+
+
+  display.display();
+  display.setCursor(00,20);
+  display.print(F("Loc:"));
+  display.print(MH_txt);
+
+ 
+  return;
+}
+
+*/
+
+ //**********************************************************************
+
+ //void displayInfo()
+{ 
+   char string[12];
+  float gpsmnth = (gps.date.month());
+
+ //Date
+{
+  display.display();
+  display.setCursor(00,00);
+  display.print(F("Date:"));
+  if (gps.date.isValid())
+  {
+    display.print(dtostrf(gpsmnth,2,0,string));
+    display.print(F("/"));
+   // display.print(dtostrf(gpsday,2,0,string));
+    display.print(F("/"));
+   // display.print(dtostrf(gpsyear,4,0,string));
+  }
+  else
+  {
+    display.print(F("No data"));
+  }
+ //**********************************************************************
+ //Time
+  display.display();
+  display.setCursor(00,10);
+  display.print(F("Time:"));
+  
+    if (gps.time.isValid())
+  {
+  if (gps.time.hour() < 10) display.print(F("0"));
+    display.print(gps.time.hour());
+    display.print(F(":"));
+  if (gps.time.minute() < 10) display.print(F("0"));
+    display.print(gps.time.minute());
+    display.print(F(":"));
+  if (gps.time.second() < 10) display.print(F("0"));
+    display.print(gps.time.second());
+  }
+  else
+  {
+    display.print(F("No data"));
+   }
+
+    
+ //**********************************************************************
+ //Lat & Long
+  display.display();
+  display.setCursor(00,30);
+  display.print(F("Pos:"));
+ 
+  {
+    display.print(gps.location.lat());
+    display.print(F("/"));
+    display.print(gps.location.lng());
+
+  }
+
+ //**********************************************************************
+ //Locator
+ // display.display();
+ // display.setCursor(00,20);
+ // display.print(F("Loc:"));
+ // display.print(MH_txt);
+ 
+ //**********************************************************************
+ //Satellites in view
+  char string [8];
+  float gpsfix = (gps.satellites.value());
+  display.display();
+  display.setCursor(00,40);
+  display.print(F("Fix:"));
+  display.print(dtostrf(gpsfix,2,0,string));;
+
+
+
+}
+}
+
