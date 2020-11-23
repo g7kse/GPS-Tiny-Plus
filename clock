@@ -1,0 +1,77 @@
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+#include <LiquidCrystal.h>
+/*
+   This sample sketch demonstrates the normal use of a TinyGPS++ (TinyGPSPlus) object.
+   It requires the use of SoftwareSerial, and assumes that you have a
+   9600-baud serial GPS device hooked up on pins 2(rx) and 3(tx).
+*/
+static const int RXPin = 2, TXPin = 3;
+static const uint32_t GPSBaud = 9600;
+
+// The TinyGPS++ object
+TinyGPSPlus gps;
+
+// The serial connection to the GPS device
+SoftwareSerial ss(RXPin, TXPin);
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(12, 13, 5, 4, 3, 2 );
+
+void setup()
+{
+  ss.begin(GPSBaud);
+  lcd.begin(16,2);
+
+  lcd.setCursor(1,0);
+  lcd.print("Tiny GPS+ Time");
+  delay(3000);
+  lcd.setCursor(1,2);
+  lcd.print("by Alex, g7kse");
+  delay(5000);
+  lcd.clear();
+ 
+}
+
+void loop()
+{
+  // This sketch displays information every time a new sentence is correctly encoded.
+  while (ss.available() > 0)
+    if (gps.encode(ss.read()))
+      displayInfo();
+
+  if (millis() > 5000 && gps.charsProcessed() < 10)
+  {
+    lcd.print("No GPS detected");
+    for (int positionCounter = 0; positionCounter < 20; positionCounter++) {
+    while(true);
+    }
+  }
+}
+
+void displayInfo()
+{
+lcd.setCursor(4,0);
+  {
+    if (gps.time.hour() < 10) lcd.print(F("0"));
+    lcd.print(gps.time.hour());
+    lcd.print(F(":"));
+    if (gps.time.minute() < 10) lcd.print(F("0"));
+    lcd.print(gps.time.minute());
+    lcd.print(F(":"));
+    if (gps.time.second() < 10) lcd.print(F("0"));
+    lcd.print(gps.time.second());
+ 
+  }
+lcd.setCursor(3,2);
+  {
+    if (gps.date.day() < 10) lcd.print(F("0"));
+    lcd.print(gps.date.day());
+    lcd.print(F("/"));
+    if (gps.date.month() < 10) lcd.print(F("0"));
+    lcd.print(gps.date.month());
+    lcd.print(F("/"));
+    lcd.print(gps.date.year());
+  }
+
+}
